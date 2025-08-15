@@ -1,8 +1,23 @@
+import { db } from '../db';
+import { itemsTable } from '../db/schema';
 import { type Item } from '../schema';
+import { eq } from 'drizzle-orm';
 
-export async function getItems(): Promise<Item[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all active items from the database.
-    // Available to all authenticated users for creating requests.
-    return Promise.resolve([]);
-}
+export const getItems = async (): Promise<Item[]> => {
+  try {
+    // Fetch all active items from the database
+    const results = await db.select()
+      .from(itemsTable)
+      .where(eq(itemsTable.is_active, true))
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    return results.map(item => ({
+      ...item,
+      estimated_price: item.estimated_price ? parseFloat(item.estimated_price) : null
+    }));
+  } catch (error) {
+    console.error('Failed to fetch items:', error);
+    throw error;
+  }
+};
